@@ -104,25 +104,39 @@ public class MainActivity extends Activity implements ErrorDialog.IListener {
 
         mVideoView.setSurfaceTextureListener(mSurfaceTextureListener);
 
-        // If this is an actual gfycat link, extract the name
-        Uri data = getIntent().getData();
-        if (data.getHost().endsWith("gfycat.com")) {
-            List<String> pathSegments = data.getPathSegments();
-            if (pathSegments.size() == 0) {
-                // They've gone to gfycat.com itself; not sure yet how to disclude that URL,
-                // so just show an error dialog for now.
-                showErrorDialog();
-            }
-            else if (pathSegments.size() == 1) {
-                mGfyName = pathSegments.get(0);
-            }
-            else if (pathSegments.size() > 1 && pathSegments.get(0).equals("fetch")) {
-                String strUrl = data.toString();
-                mGifUrl = strUrl.substring(strUrl.indexOf("fetch") + 6);
+        Intent intent = getIntent();
+        String action = intent.getAction();
+        String type = intent.getType();
+
+        // Handle SEND Intent
+        if (Intent.ACTION_SEND.equals(action)) {
+            if ("text/plain".equals(type))
+            {
+                String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
+                if (sharedText != null) {
+                    mGifUrl = sharedText;
+                }
             }
         }
+
+        // If this is an actual gfycat link, extract the name
         else {
-            mGifUrl = data.toString();
+            Uri data = intent.getData();
+            if (data.getHost().endsWith("gfycat.com")) {
+                List<String> pathSegments = data.getPathSegments();
+                if (pathSegments.size() == 0) {
+                    // They've gone to gfycat.com itself; not sure yet how to disclude that URL,
+                    // so just show an error dialog for now.
+                    showErrorDialog();
+                } else if (pathSegments.size() == 1) {
+                    mGfyName = pathSegments.get(0);
+                } else if (pathSegments.size() > 1 && pathSegments.get(0).equals("fetch")) {
+                    String strUrl = data.toString();
+                    mGifUrl = strUrl.substring(strUrl.indexOf("fetch") + 6);
+                }
+            } else {
+                mGifUrl = data.toString();
+            }
         }
 
         if (savedInstanceState != null) {
