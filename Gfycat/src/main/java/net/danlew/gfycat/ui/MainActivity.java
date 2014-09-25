@@ -106,16 +106,12 @@ public class MainActivity extends Activity implements ErrorDialog.IListener {
 
         Intent intent = getIntent();
         String action = intent.getAction();
-        String type = intent.getType();
 
         // Handle SEND Intent
         if (Intent.ACTION_SEND.equals(action)) {
-            if ("text/plain".equals(type))
-            {
-                String sharedText = intent.getStringExtra(Intent.EXTRA_TEXT);
-                if (sharedText != null) {
-                    mGifUrl = sharedText;
-                }
+            CharSequence sharedText = intent.getCharSequenceExtra(Intent.EXTRA_TEXT);
+            if (!TextUtils.isEmpty(sharedText) && URLUtil.isNetworkUrl(sharedText.toString())) {
+                mGifUrl = sharedText.toString();
             }
         }
 
@@ -128,15 +124,22 @@ public class MainActivity extends Activity implements ErrorDialog.IListener {
                     // They've gone to gfycat.com itself; not sure yet how to disclude that URL,
                     // so just show an error dialog for now.
                     showErrorDialog();
-                } else if (pathSegments.size() == 1) {
+                }
+                else if (pathSegments.size() == 1) {
                     mGfyName = pathSegments.get(0);
-                } else if (pathSegments.size() > 1 && pathSegments.get(0).equals("fetch")) {
+                }
+                else if (pathSegments.size() > 1 && pathSegments.get(0).equals("fetch")) {
                     String strUrl = data.toString();
                     mGifUrl = strUrl.substring(strUrl.indexOf("fetch") + 6);
                 }
-            } else {
+            }
+            else {
                 mGifUrl = data.toString();
             }
+        }
+
+        if (mGifUrl == null && mGfyName == null) {
+            showErrorDialog();
         }
 
         if (savedInstanceState != null) {
